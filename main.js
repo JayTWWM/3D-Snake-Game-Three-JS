@@ -1,3 +1,4 @@
+var speed;
 var scene = new THREE.Scene();
 scene.background = new THREE.Color(0x6f00ff);
 var camera = new THREE.PerspectiveCamera(
@@ -73,9 +74,7 @@ function Piece(x, y) {
 
 var lightPos = [new THREE.Vector3(0, 50, 20), new THREE.Vector3(0, 15, -20), new THREE.Vector3(-20, 15, 20), new THREE.Vector3(20, -15, 0)];
 
-var mov = 5,
-    delta = 1 / mov,
-    tetha = 0.0,
+var tetha = 0.0,
     edgeSize = 20,
     padding = 0.15,
     cubeSize = edgeSize + (edgeSize - 1) * padding,
@@ -87,7 +86,11 @@ var paused = false,
     pause_z = [];
 
 var snake = [],
-    apple, cube = new THREE.BoxGeometry(1, 1, 1),
+    apple,
+    hole1,
+    hole2,
+    sphere = new THREE.SphereGeometry(0.5, 32, 32),
+    cube = new THREE.BoxGeometry(1, 1, 1),
     gameCube = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize),
     direction = new THREE.Vector3(1, 0, 0),
     score = 0;
@@ -99,7 +102,12 @@ controls.enableKeys = false;
 
 var clock = new THREE.Clock(),
     text = document.createElement("div"),
+    texter = document.createElement("div"),
     canvas = document.createElement("canvas"),
+    p = document.createElement("p"),
+    label = document.createElement("label"),
+    input = document.createElement("input"),
+    div = document.createElement("div"),
     keysQueue = [],
     end = false,
     body_texture = new THREE.TextureLoader().load('textures/scales.jpg'),
@@ -134,19 +142,55 @@ function init() {
     }
 
     var appleCubeMaterial = new THREE.MeshPhongMaterial({ map: apple_texture });
-    apple = new Cube(spawnAppleVector(), appleCubeMaterial, scene);
+    var blackHoleMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    apple = new Sphere(spawnAppleVector(), appleCubeMaterial, scene);
+    hole1 = new Sphere(spawnHole1Vector(), blackHoleMaterial, scene)
+    hole2 = new Sphere(spawnHole2Vector(), blackHoleMaterial, scene);
     var edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
     new Cube(new THREE.Vector3(0, 0, 0), edgesMaterial, scene, gameCube, true).setPosition(0, 0, 0);
 
     text.style.position = "absolute";
     text.style.width = 200;
     text.style.height = 100;
-    text.innerHTML = "Score: " + score;
+    texter.innerHTML = "Score: " + score;
     text.style.top = 20 + "px";
     text.style.left = 20 + "px";
     text.style.fontSize = 50 + "px";
 
     document.body.appendChild(text);
+
+    text.appendChild(texter);
+
+    input.type = "text";
+    input.id = "amount";
+    input.readOnly = true;
+    input.style = "border:0; color:#f6931f; font-weight:bold; width:80px; height:60px; text-align: center;font-size:40px";
+    label.htmlFor = "amount";
+    label.innerHTML = "Speed: ";
+
+    p.appendChild(label);
+    p.appendChild(input);
+
+    text.appendChild(p);
+
+    div.id = "slider-vertical";
+    div.style = style = "height:400px;";
+
+    text.appendChild(div);
+
+    $("#slider-vertical").slider({
+        orientation: "vertical",
+        range: "min",
+        min: 0,
+        max: 100,
+        value: 60,
+        slide: function(event, ui) {
+            $("#amount").val(ui.value);
+            speed = ui.value;
+        }
+    });
+    $("#amount").val($("#slider-vertical").slider("value"));
+    speed = $("#slider-vertical").slider("value")
 
     clock.startTime = 0.0;
     render();
@@ -160,7 +204,7 @@ function restart() {
     }
     end = false;
     direction = new THREE.Vector3(1, 0, 0);
-    text.innerHTML = "Score: " + 0;
+    texter = "Score: " + 0;
     score = 0;
 }
 
@@ -189,11 +233,47 @@ function spawnAppleVector() {
     var x = randInRange(0, edgeSize - 1),
         y = randInRange(0, edgeSize - 1),
         z = randInRange(0, edgeSize - 1);
+    var returner = new THREE.Vector3(x + x * padding - halfCubeSize + 0.5, y + y * padding - halfCubeSize + 0.5, z + z * padding - halfCubeSize + 0.5);
+    if (spawnHole1Vector() == returner || spawnHole2Vector() == returner) {
+        return spawnAppleVector();
+    } else {
+        return returner;
+    }
+}
+
+function spawnHole1Vector() {
+    var x = 0.25 * edgeSize,
+        y = 0.25 * edgeSize,
+        z = 0.25 * edgeSize;
+    return new THREE.Vector3(x + x * padding - halfCubeSize + 0.5, y + y * padding - halfCubeSize + 0.5, z + z * padding - halfCubeSize + 0.5);
+}
+
+function spawnHole2Vector() {
+    var x = 0.75 * edgeSize,
+        y = 0.75 * edgeSize,
+        z = 0.75 * edgeSize;
     return new THREE.Vector3(x + x * padding - halfCubeSize + 0.5, y + y * padding - halfCubeSize + 0.5, z + z * padding - halfCubeSize + 0.5);
 }
 
 function Cube(vec, material, scene, geometry, renderWireframe) {
     this.geometry = typeof geometry === 'undefined' ? cube : geometry;
+    this.mesh = new THREE.Mesh(this.geometry, material);
+
+    if (typeof renderWireframe === 'undefined' || !renderWireframe) {
+        this.mesh.position.set(vec.x, vec.y, vec.z);
+        scene.add(this.mesh);
+    } else {
+        var edges = new THREE.EdgesGeometry(this.mesh.geometry);
+        scene.add(new THREE.LineSegments(edges, material));
+    }
+
+    this.setPosition = function(vec) {
+        this.mesh.position.set(vec.x, vec.y, vec.z);
+    };
+}
+
+function Sphere(vec, material, scene, geometry, renderWireframe) {
+    this.geometry = typeof geometry === 'undefined' ? sphere : geometry;
     this.mesh = new THREE.Mesh(this.geometry, material);
 
     if (typeof renderWireframe === 'undefined' || !renderWireframe) {
@@ -219,7 +299,7 @@ function render() {
 
     tetha += clock.getDelta();
 
-    if (tetha > delta) {
+    if (tetha > 20 / speed) {
         var tail = snake.shift();
         var head = snake[snake.length - 1];
 
@@ -247,8 +327,9 @@ function render() {
             restart();
         }
         if (head.mesh.position.distanceTo(apple.mesh.position) < 1) {
+            console.log("c");
             apple.setPosition(spawnAppleVector());
-            text.innerHTML = "Score: " + (++score);
+            texter.innerHTML = "Score: " + (++score);
             new Audio("textures/level.wav").play();
 
             document.body.appendChild(canvas);
@@ -277,6 +358,12 @@ function render() {
             head.mesh.position.z = halfCubeSize - 0.5;
         } else if (head.mesh.position.z > halfCubeSize) {
             head.mesh.position.z = -halfCubeSize + 0.5;
+        }
+
+        if (head.mesh.position.distanceTo(hole1.mesh.position) < 1) {
+            head.setPosition(hole2.mesh.position);
+        } else if (head.mesh.position.distanceTo(hole2.mesh.position) < 1) {
+            head.setPosition(hole1.mesh.position);
         }
 
         tetha = 0;
