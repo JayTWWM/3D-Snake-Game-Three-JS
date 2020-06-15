@@ -142,11 +142,11 @@ function init() {
     }
 
     var appleCubeMaterial = new THREE.MeshPhongMaterial({ map: apple_texture });
-    var blackHoleMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
+    var blackHoleMaterial = new THREE.MeshPhongMaterial({ color: 0x000000 });
     apple = new Sphere(spawnAppleVector(), appleCubeMaterial, scene);
     hole1 = new Sphere(spawnHole1Vector(), blackHoleMaterial, scene)
     hole2 = new Sphere(spawnHole2Vector(), blackHoleMaterial, scene);
-    var edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+    var edgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
     new Cube(new THREE.Vector3(0, 0, 0), edgesMaterial, scene, gameCube, true).setPosition(0, 0, 0);
 
     text.style.position = "absolute";
