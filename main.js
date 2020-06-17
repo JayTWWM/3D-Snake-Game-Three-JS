@@ -146,49 +146,62 @@ function init() {
     apple = new Sphere(spawnAppleVector(), appleCubeMaterial, scene);
     hole1 = new Sphere(spawnHole1Vector(), blackHoleMaterial, scene)
     hole2 = new Sphere(spawnHole2Vector(), blackHoleMaterial, scene);
-    var edgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+    var edgesMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
     new Cube(new THREE.Vector3(0, 0, 0), edgesMaterial, scene, gameCube, true).setPosition(0, 0, 0);
 
     text.style.position = "absolute";
     text.style.width = 200;
     text.style.height = 100;
-    texter.innerHTML = "Score: " + score;
+    text.innerHTML = "Score: " + score;
     text.style.top = 20 + "px";
     text.style.left = 20 + "px";
     text.style.fontSize = 50 + "px";
+    text.style.color = "white";
 
     document.body.appendChild(text);
 
-    text.appendChild(texter);
+    texter.style.position = "absolute";
+    texter.style.width = 200;
+    texter.style.height = 100;
+    texter.innerHTML = "Slide to adjust speed";
+    texter.style.top = 20 + "px";
+    texter.style.right = 20 + "px";
+    texter.style.fontSize = 30 + "px";
+    texter.style.color = "white";
+
+    document.body.appendChild(texter);
 
     input.type = "text";
     input.id = "amount";
     input.readOnly = true;
-    input.style = "border:0; color:#f6931f; font-weight:bold; width:80px; height:60px; text-align: center;font-size:40px";
+    input.style = "border:2; color:#f6931f; font-weight:bold; width:40px; height:30px; text-align: center;font-size:22.5px;backgroundColor:#6f0ff";
+    input.style.borderRadius = 8 + "px";
     label.htmlFor = "amount";
     label.innerHTML = "Speed: ";
+    label.style.color = "white"
 
     p.appendChild(label);
     p.appendChild(input);
 
-    text.appendChild(p);
+    texter.appendChild(p);
 
     div.id = "slider-vertical";
-    div.style = style = "height:400px;";
+    div.style = style = "height:20px;width:400px;";
 
-    text.appendChild(div);
+    texter.appendChild(div);
 
     $("#slider-vertical").slider({
-        orientation: "vertical",
+        orientation: "horizontal",
         range: "min",
         min: 0,
         max: 100,
-        value: 60,
+        value: 50,
         slide: function(event, ui) {
             $("#amount").val(ui.value);
             speed = ui.value;
         }
     });
+    $("#slider-vertical .ui-slider-range").css('background', 'rgb(255,140,0)');
     $("#amount").val($("#slider-vertical").slider("value"));
     speed = $("#slider-vertical").slider("value")
 
@@ -327,7 +340,6 @@ function render() {
             restart();
         }
         if (head.mesh.position.distanceTo(apple.mesh.position) < 1) {
-            console.log("c");
             apple.setPosition(spawnAppleVector());
             texter.innerHTML = "Score: " + (++score);
             new Audio("textures/level.wav").play();
