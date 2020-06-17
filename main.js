@@ -341,7 +341,7 @@ function render() {
         }
         if (head.mesh.position.distanceTo(apple.mesh.position) < 1) {
             apple.setPosition(spawnAppleVector());
-            texter.innerHTML = "Score: " + (++score);
+            text.innerHTML = "Score: " + (++score);
             new Audio("textures/level.wav").play();
 
             document.body.appendChild(canvas);
